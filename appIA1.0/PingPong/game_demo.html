@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .mobile-frame {
+            width: 400px;
+            height: 800px;
+            background: #0f3460;
+            border-radius: 40px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            overflow: hidden;
+            border: 8px solid #333;
+            position: relative;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+            cursor: none;
+            touch-action: none;
+        }
+        
+        .menu-screen {
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 40px 20px;
+        }
+        
+        .title {
+            font-size: 56px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #00d4ff, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #aaa;
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #0084ff 0%, #0064ff 100%);
+            border: none;
+            color: white;
+            padding: 14px 35px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 132, 255, 0.5);
+            transition: all 0.3s;
+            width: 85%;
+            max-width: 300px;
+        }
+        
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 132, 255, 0.8);
+        }
+        
+        .button-outline {
+            background: transparent;
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .button-outline:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        .score-display {
+            position: absolute;
+            top: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            color: white;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        
+        .score-item {
+            text-align: center;
+        }
+        
+        .score-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .player-score {
+            color: #00d4ff;
+        }
+        
+        .ai-score {
+            color: #ff4444;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 20px;
+            z-index: 100;
+            display: none;
+            width: 90%;
+        }
+        
+        .game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        
+        .game-over p {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        
+        .game-over-play {
+            font-size: 16px;
+            color: #aaa;
+            margin-top: 20px;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: transparent;
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+        
+        .settings-grid {
+            width: 90%;
+            max-width: 350px;
+            margin: 20px 0;
+        }
+        
+        .setting-item {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            text-align: left;
+            color: white;
+        }
+        
+        .setting-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .setting-item input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .setting-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .rules-text {
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #ccc;
+            max-height: 70%;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+        }
+        
+        .rules-text h3 {
+            color: #00d4ff;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .mode-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <!-- MENÚ PRINCIPAL -->
+        <div class="screen active" id="menuScreen">
+            <div class="menu-screen">
+                <div class="title">PING PONG</div>
+                <div class="subtitle">Juego de reflejos clásico</div>
+                <button class="button" onclick="showGameModeScreen()">JUGAR</button>
+                <button class="button button-outline" onclick="showSettingsScreen()">AJUSTES</button>
+                <button class="button button-outline" onclick="showRulesScreen()">REGLAS</button>
+            </div>
+        </div>
+        
+        <!-- SELECCIÓN DE MODO -->
+        <div class="screen" id="gameModeScreen">
+            <button class="back-button" onclick="showMenuScreen()">←</button>
+            <div class="menu-screen">
+                <div class="title" style="font-size: 36px;">MODO DE JUEGO</div>
+                <div class="mode-selection">
+                    <button class="button" onclick="startGame('ai')">🤖 vs MÁQUINA</button>
+                    <button class="button button-outline" onclick="startGame('player2')">👥 vs JUGADOR 2</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PANTALLA DE AJUSTES -->
+        <div class="screen" id="settingsScreen">
+            <button class="back-button" onclick="showMenuScreen()">←</button>
+            <div class="menu-screen">
+                <div class="title" style="font-size: 36px;">AJUSTES</div>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>🔊 Volumen: <span id="volumeValue">100</span>%</label>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="100" onchange="updateVolume(this.value)">
+                    </div>
+                    <div class="setting-item">
+                        <label>📳 Vibración:</label>
+                        <input type="checkbox" id="vibrationToggle" checked onchange="updateVibration(this.checked)"> 
+                        <span id="vibrationText">Activada</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>✨ Efectos visuales:</label>
+                        <input type="checkbox" id="effectsToggle" checked onchange="updateEffects(this.checked)"> 
+                        <span id="effectsText">Activados</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PANTALLA DE REGLAS -->
+        <div class="screen" id="rulesScreen">
+            <button class="back-button" onclick="showMenuScreen()">←</button>
+            <div class="menu-screen">
+                <div class="title" style="font-size: 36px;">REGLAS</div>
+                <div class="rules-text">
+                    <h3>Objetivo</h3>
+                    <p>Ser el primero en alcanzar 11 puntos golpeando la pelota con tu pala.</p>
+                    
+                    <h3>Controles</h3>
+                    <p>Desliza tu dedo/ratón verticalmente para mover tu pala hacia arriba o abajo.</p>
+                    
+                    <h3>Puntuación</h3>
+                    <p>Ganas un punto cuando tu oponente no puede devolver la pelota. La pelota rebota en los bordes superior e inferior.</p>
+                    
+                    <h3>Dificultad</h3>
+                    <p>En modo IA, la dificultad aumenta cada 3 puntos ganados. ¡Demuestra tus habilidades!</p>
+                    
+                    <h3>Modos</h3>
+                    <p><strong>vs Máquina:</strong> Juega contra una IA inteligente y adaptativa.</p>
+                    <p><strong>vs Jugador 2:</strong> Juega con un amigo en el mismo dispositivo.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PANTALLA DE JUEGO -->
+        <div class="screen" id="gameScreen">
+            <button class="back-button" onclick="pauseGame()">←</button>
+            <canvas id="gameCanvas" width="400" height="800"></canvas>
+            <div class="score-display" id="scoreDisplay" style="display: flex;">
+                <div class="score-item">
+                    <div id="player1Label" style="color: #00d4ff;">JUGADOR 1</div>
+                    <div class="score-number player-score" id="playerScore">0</div>
+                </div>
+                <div class="score-item">
+                    <div id="player2Label" style="color: #ff4444;">JUGADOR 2</div>
+                    <div class="score-number ai-score" id="aiScore">0</div>
+                </div>
+            </div>
+            <div class="game-over" id="gameOverScreen">
+                <h2 id="gameOverTitle">¡GANASTE!</h2>
+                <p id="gameOverScore">Final: 11 - 5</p>
+                <p class="game-over-play">Toca para jugar de nuevo</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Settings
+        let settings = {
+            volume: 100,
+            vibration: true,
+            effects: true
+        };
+        
+        let gameMode = 'ai'; // 'ai' or 'player2'
+        let isGamePaused = false;
+        
+        // Game state
+        const game = {
+            screenWidth: 400,
+            screenHeight: 800,
+            paddleWidth: 15,
+            paddleHeight: 100,
+            paddleMargin: 20,
+            ballRadius: 8,
+            ballX: 200,
+            ballY: 400,
+            ballVelocityX: -5,
+            ballVelocityY: 3,
+            maxBallSpeed: 12,
+            playerPaddleX: 20,
+            playerPaddleY: 350,
+            aiPaddleX: 365,
+            aiPaddleY: 350,
+            playerScore: 0,
+            aiScore: 0,
+            gameOver: false,
+            aiSpeed: 5,
+            difficulty: 1,
+            gameRunning: false
+        };
+
+        // Screen navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function showMenuScreen() {
+            showScreen('menuScreen');
+            game.gameRunning = false;
+        }
+        
+        function showGameModeScreen() {
+            showScreen('gameModeScreen');
+        }
+        
+        function showSettingsScreen() {
+            showScreen('settingsScreen');
+        }
+        
+        function showRulesScreen() {
+            showScreen('rulesScreen');
+        }
+        
+        function startGame(mode) {
+            gameMode = mode;
+            showScreen('gameScreen');
+            resetGameState();
+            game.gameRunning = true;
+            isGamePaused = false;
+            
+            // Actualizar etiquetas
+            if (mode === 'player2') {
+                document.getElementById('player1Label').textContent = 'JUGADOR 1';
+                document.getElementById('player2Label').textContent = 'JUGADOR 2';
+            } else {
+                document.getElementById('player1Label').textContent = 'TÚ';
+                document.getElementById('player2Label').textContent = 'IA';
+            }
+        }
+        
+        function pauseGame() {
+            game.gameRunning = false;
+            showMenuScreen();
+        }
+        
+        function resetGameState() {
+            game.ballX = game.screenWidth / 2;
+            game.ballY = game.screenHeight / 2;
+            game.ballVelocityX = -5;
+            game.ballVelocityY = 3;
+            game.playerScore = 0;
+            game.aiScore = 0;
+            game.difficulty = 1;
+            game.aiSpeed = 5;
+            game.gameOver = false;
+            game.playerPaddleY = 350;
+            game.aiPaddleY = 350;
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('playerScore').textContent = '0';
+            document.getElementById('aiScore').textContent = '0';
+        }
+
+        function update() {
+            if (game.gameOver || !game.gameRunning) return;
+
+            game.ballX += game.ballVelocityX;
+            game.ballY += game.ballVelocityY;
+
+            // Ball collision con top/bottom
+            if (game.ballY - game.ballRadius < 0 || game.ballY + game.ballRadius > game.screenHeight) {
+                game.ballVelocityY *= -1;
+                game.ballY = game.ballY - game.ballRadius < 0
+                    ? game.ballRadius
+                    : game.screenHeight - game.ballRadius;
+                playSound();
+            }
+
+            // Collision - Player paddle
+            if (game.ballX - game.ballRadius < game.playerPaddleX + game.paddleWidth &&
+                game.ballY > game.playerPaddleY &&
+                game.ballY < game.playerPaddleY + game.paddleHeight &&
+                game.ballVelocityX < 0) {
+                game.ballVelocityX *= -1.05;
+                game.ballX = game.playerPaddleX + game.paddleWidth + game.ballRadius;
+                let hitPos = (game.ballY - game.playerPaddleY) / game.paddleHeight;
+                game.ballVelocityY += (hitPos - 0.5) * 8;
+                playSound();
+                vibrateDevice();
+            }
+
+            // Collision - AI/Player 2 paddle
+            if (game.ballX + game.ballRadius > game.aiPaddleX &&
+                game.ballY > game.aiPaddleY &&
+                game.ballY < game.aiPaddleY + game.paddleHeight &&
+                game.ballVelocityX > 0) {
+                game.ballVelocityX *= -1.05;
+                game.ballX = game.aiPaddleX - game.ballRadius;
+                let hitPos = (game.ballY - game.aiPaddleY) / game.paddleHeight;
+                game.ballVelocityY += (hitPos - 0.5) * 8;
+                playSound();
+                vibrateDevice();
+            }
+
+            // Limit ball speed
+            let speed = Math.sqrt(game.ballVelocityX ** 2 + game.ballVelocityY ** 2);
+            if (speed > game.maxBallSpeed) {
+                game.ballVelocityX = (game.ballVelocityX / speed) * game.maxBallSpeed;
+                game.ballVelocityY = (game.ballVelocityY / speed) * game.maxBallSpeed;
+            }
+
+            // Scoring
+            if (game.ballX < 0) {
+                game.aiScore++;
+                document.getElementById('aiScore').textContent = game.aiScore;
+                checkGameOver();
+                resetBall();
+            } else if (game.ballX > game.screenWidth) {
+                game.playerScore++;
+                document.getElementById('playerScore').textContent = game.playerScore;
+                if (gameMode === 'ai') {
+                    increaseDifficulty();
+                }
+                checkGameOver();
+                resetBall();
+            }
+
+            // AI or Player 2 movement
+            if (gameMode === 'ai') {
+                updateAI();
+            } else {
+                updatePlayer2();
+            }
+        }
+
+        function resetBall() {
+            game.ballX = game.screenWidth / 2;
+            game.ballY = game.screenHeight / 2;
+            game.ballVelocityX = (Math.random() > 0.5 ? -1 : 1) * (3 + (gameMode === 'ai' ? game.difficulty * 0.3 : 3));
+            game.ballVelocityY = (Math.random() - 0.5) * 6;
+        }
+
+        function updateAI() {
+            let targetY = game.ballY - game.paddleHeight / 2;
+            let speedAdjustment = 1 + (game.difficulty * 0.2);
+
+            if (game.aiPaddleY < targetY - 5) {
+                game.aiPaddleY += game.aiSpeed * speedAdjustment;
+            } else if (game.aiPaddleY > targetY + 5) {
+                game.aiPaddleY -= game.aiSpeed * speedAdjustment;
+            }
+
+            game.aiPaddleY = Math.max(0, Math.min(game.screenHeight - game.paddleHeight, game.aiPaddleY));
+        }
+        
+        function updatePlayer2() {
+            // Player 2 puede ser controlado por el mismo usuario o por un segundo jugador
+            // Por ahora, la IA juega en ambos lados cuando es modo vs Jugador 2
+            updateAI();
+        }
+
+        function increaseDifficulty() {
+            if (game.playerScore % 3 === 0 && game.playerScore > 0) {
+                game.difficulty++;
+                game.aiSpeed += 0.3;
+            }
+        }
+
+        function checkGameOver() {
+            if (game.playerScore >= 11 || game.aiScore >= 11) {
+                game.gameOver = true;
+                showGameOver();
+            }
+        }
+
+        function showGameOver() {
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const title = document.getElementById('gameOverTitle');
+            const score = document.getElementById('gameOverScore');
+            
+            if (game.playerScore > game.aiScore) {
+                title.textContent = '¡GANASTE!';
+                title.style.color = '#00d4ff';
+            } else {
+                title.textContent = '¡GAME OVER!';
+                title.style.color = '#ff4444';
+            }
+            
+            score.textContent = `Final: ${game.playerScore} - ${game.aiScore}`;
+            gameOverScreen.style.display = 'block';
+            vibrateDevice(200);
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(15, 52, 96, 0.05)';
+            ctx.fillRect(0, 0, game.screenWidth, game.screenHeight);
+
+            // Center line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(game.screenWidth / 2, 0);
+            ctx.lineTo(game.screenWidth / 2, game.screenHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Player paddle
+            ctx.fillStyle = '#00d4ff';
+            ctx.shadowColor = settings.effects ? 'rgba(0, 212, 255, 0.6)' : 'transparent';
+            ctx.shadowBlur = 15;
+            roundRect(ctx, game.playerPaddleX, game.playerPaddleY, game.paddleWidth, game.paddleHeight, 10);
+            ctx.fill();
+
+            // AI/Player 2 paddle
+            ctx.fillStyle = gameMode === 'player2' ? '#ff9933' : '#ff4444';
+            ctx.shadowColor = settings.effects ? (gameMode === 'player2' ? 'rgba(255, 153, 51, 0.6)' : 'rgba(255, 68, 68, 0.6)') : 'transparent';
+            roundRect(ctx, game.aiPaddleX, game.aiPaddleY, game.paddleWidth, game.paddleHeight, 10);
+            ctx.fill();
+
+            // Ball
+            ctx.fillStyle = '#ffff00';
+            ctx.shadowColor = settings.effects ? 'rgba(255, 255, 0, 0.8)' : 'transparent';
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            ctx.arc(game.ballX, game.ballY, game.ballRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Mouse and touch controls - FIXED
+        document.addEventListener('mousemove', (e) => {
+            if (game.gameRunning && !game.gameOver && gameMode === 'ai') {
+                const canvas = document.getElementById('gameCanvas');
+                const rect = canvas.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                
+                game.playerPaddleY = y - game.paddleHeight / 2;
+                game.playerPaddleY = Math.max(0, Math.min(game.screenHeight - game.paddleHeight, game.playerPaddleY));
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (game.gameRunning && !game.gameOver) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const y = touch.clientY - rect.top;
+                
+                game.playerPaddleY = y - game.paddleHeight / 2;
+                game.playerPaddleY = Math.max(0, Math.min(game.screenHeight - game.paddleHeight, game.playerPaddleY));
+            }
+        }, { passive: false });
+
+        // Restart game
+        canvas.addEventListener('click', () => {
+            if (game.gameOver) {
+                resetGameState();
+                game.gameRunning = true;
+            }
+        });
+
+        // Settings functions
+        function updateVolume(value) {
+            settings.volume = value;
+            document.getElementById('volumeValue').textContent = value;
+        }
+        
+        function updateVibration(checked) {
+            settings.vibration = checked;
+            document.getElementById('vibrationText').textContent = checked ? 'Activada' : 'Desactivada';
+        }
+        
+        function updateEffects(checked) {
+            settings.effects = checked;
+            document.getElementById('effectsText').textContent = checked ? 'Activados' : 'Desactivados';
+        }
+        
+        function playSound() {
+            if (settings.volume === 0) return;
+            // Aquí iría la reproducción de sonido
+            // console.log('Sound: ' + settings.volume + '%');
+        }
+        
+        function vibrateDevice(duration = 50) {
+            if (settings.vibration && navigator.vibrate) {
+                navigator.vibrate(duration);
+            }
+        }
+
+        // Initialize
+        gameLoop();
+    </script>
+</body>
+</html>
