@@ -14,9 +14,11 @@ jobs:
         with:
           channel: stable
 
-      - run: flutter pub get
+     - run: flutter pub get
+      working-directory: appIA1.0/PingPong
 
-      - run: flutter build apk --release
+    - run: flutter build apk --release
+      working-directory: appIA1.0/PingPong
 
       - uses: actions/upload-artifact@v4
         with:
