@@ -14,13 +14,13 @@ jobs:
         with:
           channel: stable
 
-     - run: flutter pub get
-      working-directory: appIA1.0/PingPong
+      - run: flutter pub get
+        working-directory: appIA1.0/PingPong
 
-    - run: flutter build apk --release
-      working-directory: appIA1.0/PingPong
+      - run: flutter build apk --release
+        working-directory: appIA1.0/PingPong
 
       - uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: appIA1.0/PingPong/build/app/outputs/flutter-apk/app-release.apk
